@@ -1,4 +1,4 @@
-from scapy.all import *
+# from scapy.all import *
 from scapy.layers.l2 import Ether
 import time
 import math

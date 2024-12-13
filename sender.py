@@ -1,18 +1,20 @@
 from scapy.all import IP, send, sniff, Raw
 import threading
+import time
 
 
 def read_file_and_send(filename, source_ip, destination_ip):
     with open(filename, 'r') as file:
         for line in file:
             # Create the inner IP packet
-            inner_ip_packet = IP(src=source_ip, dst=destination_ip) / Raw(load=line.encode('utf-8'))
+            inner_ip_packet = IP(src=destination_ip, dst=source_ip) / Raw(load=line.encode('utf-8'))
 
             # Create the outer IP packet
-            outer_ip_packet = IP(src=destination_ip, dst=source_ip) / inner_ip_packet
+            outer_ip_packet = IP(src=source_ip, dst=destination_ip) / inner_ip_packet
 
             # Send the packet to the Dest.
             send(outer_ip_packet)
+            time.sleep(1)
             print(outer_ip_packet)
 
 
@@ -50,9 +52,9 @@ def start_receiver(interface, expected_src_ip):
 def main():
     mode = input("Select mode(1: sender, 2: Receiver): ")
     filename = "send.txt"
-    source_ip = "192.168.74.190"
-    destination_ip = "192.168.74.190"
-    interface = "wlp0s20f3"
+    source_ip = "192.168.59.103"
+    destination_ip = "192.168.59.102"
+    interface = "vboxnet0"
     start_receiver(interface, source_ip)
 
     if mode == "1":
