@@ -38,13 +38,16 @@ def start_receiver(interface, expected_src_ip):
 
 
 def main():
+    mode = input("Select mode(1: sender, 2: Receiver): ")
+    filename = "send.txt"
+    source_ip = ""
+    destination_ip = ""
+    interface = ""
 
-    if args.mode == "1":
-        if not args.filename:
-            parser.error("Filename is required in send mode.")
-        read_file_and_send(args.filename, args.dest_ip, args.intermediary_ip)
-    elif args.mode == "2":
-        start_receiver(args.interface, args.dest_ip)
+    if mode == "1":
+        read_file_and_send(filename, source_ip, destination_ip)
+    elif mode == "2":
+        start_receiver(interface, destination_ip)
 
         # Keep the main thread alive
         try:
