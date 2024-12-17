@@ -1,3 +1,4 @@
+import socket
 from scapy.all import IP, send, sniff, sendp, Raw
 from scapy.layers.l2 import Ether
 import threading
@@ -12,15 +13,14 @@ def receive_and_process_packets(packet, expected_src_ip):
         print(f"Unexpected {err=}, {type(err)=}")
         raise
     print(f"Processing packet: {ip_packet}")
-
-    if ip_packet.destination_ip == IP_Packet.ip_to_bin(expected_src_ip):
+    # print((expected_src_ip))
+    # print(ip_packet.payload)
+    if ip_packet.destination_ip == expected_src_ip:
         try:
-            outer_payload = eval(ip_packet.payload)
+            outer_payload = ip_packet.payload
             inner_ip_packet = IP_Packet.deserialize(outer_payload)
             
-            response_packet = outer_payload
-            print(response_packet.get_packet_bits())
-            sendp(Ether() / Raw(load=response_packet.get_packet_bits()), iface="vboxnet0")
+            sendp(Ether() / Raw(load=inner_ip_packet.serialize()), iface="vboxnet0")
             print(f"Response sent: {inner_ip_packet}")
         except Exception as err:
             print(f"Unexpected {err=}, {type(err)=}")

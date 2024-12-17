@@ -8,20 +8,19 @@ import time
 def read_file_and_send(filename, source_ip, destination_ip):
     with open(filename, 'r') as file:
         for line in file:
-            inner_ip_packet = IP_Packet(source_ip, destination_ip, line)
-            print(inner_ip_packet.get_packet_bits())
+            inner_ip_packet = IP_Packet(destination_ip, source_ip, line.encode("utf-8"))
+            print("Inner: " + str(inner_ip_packet))
             # Create the inner IP packet
             # inner_ip_packet =  / Raw(load=line.encode('utf-8'))
 
             # Create the outer IP packet
             # outer_ip_packet = IP(src=source_ip, dst=destination_ip) / inner_ip_packet
-            outer_ip_packet = IP_Packet(source_ip, destination_ip, inner_ip_packet.get_packet_bits())
-            print(outer_ip_packet.payload)
+            outer_ip_packet = IP_Packet(source_ip, destination_ip, inner_ip_packet.serialize())
+            print("Packet sent: " + str(outer_ip_packet))
 
             # Send the packet to the Dest.
-            sendp(Ether() / Raw(load=outer_ip_packet.get_packet_bits()), iface="vboxnet0")
+            sendp(Ether() / Raw(load=outer_ip_packet.serialize()), iface="vboxnet0")
             time.sleep(1)
-            print(outer_ip_packet)
 
 
 def receive_and_process_packets(packet, expected_src_ip):
@@ -31,8 +30,8 @@ def receive_and_process_packets(packet, expected_src_ip):
         print(f"Unexpected {err=}, {type(err)=}")
         raise
     print(f"Processing packet: {ip_packet}")
-    if ip_packet.destination_ip == IP_Packet.ip_to_bin(expected_src_ip):
-        print(f"Received line: {ip_packet.payload}")
+    if ip_packet.destination_ip == expected_src_ip:
+        print(f"Received line: {ip_packet.payload.decode()}")
     else:
         print("Packet dst IP is wrong! :/")
 
