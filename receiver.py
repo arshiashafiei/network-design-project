@@ -1,8 +1,7 @@
-import socket
-from scapy.all import IP, send, sniff, sendp, Raw
-from scapy.layers.l2 import Ether
 import threading
 
+from scapy.all import sniff, sendp, Raw
+from scapy.layers.l2 import Ether
 from packet import IP_Packet
 
 
@@ -13,8 +12,7 @@ def receive_and_process_packets(packet, expected_src_ip):
         print(f"Unexpected {err=}, {type(err)=}")
         raise
     print(f"Processing packet: {ip_packet}")
-    # print((expected_src_ip))
-    # print(ip_packet.payload)
+
     if ip_packet.destination_ip == expected_src_ip:
         try:
             outer_payload = ip_packet.payload
@@ -27,10 +25,6 @@ def receive_and_process_packets(packet, expected_src_ip):
             raise
     else:
         print("Packet dst IP is wrong! :/")
-
-    
-
- 
 
 
 def listener(interface, expected_src_ip, expected_dst_ip):
