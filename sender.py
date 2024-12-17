@@ -4,6 +4,7 @@ import time
 from scapy.all import sniff, Raw, sendp
 from scapy.layers.l2 import Ether
 from packet import IP_Packet
+from colors import bcolors
 
 
 def send_packet(filename, source_ip, destination_ip):
@@ -13,7 +14,7 @@ def send_packet(filename, source_ip, destination_ip):
             # print("Inner: " + str(inner_ip_packet))
 
             outer_ip_packet = IP_Packet(source_ip, destination_ip, inner_ip_packet.serialize())
-            print("Packet sent: " + str(outer_ip_packet))
+            print(bcolors.OKBLUE + "Packet sent: " + str(outer_ip_packet) + bcolors.OKBLUE)
 
             sendp(Ether() / Raw(load=outer_ip_packet.serialize()), iface="vboxnet0")
             time.sleep(0.1)
@@ -27,9 +28,9 @@ def process_received_packets(packet, expected_src_ip):
         raise
     print(f"Processing packet: {ip_packet}")
     if ip_packet.destination_ip == expected_src_ip:
-        print(f"Received line: {ip_packet.payload.decode()}")
+        print(bcolors.OKGREEN + f"Received line: {ip_packet.payload.decode()}" + bcolors.OKGREEN)
     else:
-        print("Packet dst IP is wrong! :/")
+        print(bcolors.FAIL + "Packet dst IP is wrong! :/" + bcolors.FAIL)
 
 
 def listener(interface, expected_src_ip):
@@ -46,7 +47,7 @@ def start_receiver(interface, expected_src_ip):
 
 
 def main():
-    mode = input("Hello :(To start the program enter '1'): ")
+    mode = input(bcolors.OKCYAN + "Hello :(To start the program enter '1'): " + bcolors.OKCYAN)
     filename = "send.txt"
     source_ip = "192.168.59.103"
     destination_ip = "192.168.59.102"
@@ -61,7 +62,7 @@ def main():
             while True:
                 pass
         except KeyboardInterrupt:
-            print("Receiver stopped.")
+            print(bcolors.FAIL + "Receiver stopped." + bcolors.FAIL)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import threading
 from scapy.all import sniff, sendp, Raw
 from scapy.layers.l2 import Ether
 from packet import IP_Packet
+from colors import bcolors
 
 
 def receive_and_process_packets(packet, expected_src_ip):
@@ -19,7 +20,7 @@ def receive_and_process_packets(packet, expected_src_ip):
             inner_ip_packet = IP_Packet.deserialize(outer_payload)
             
             sendp(Ether() / Raw(load=inner_ip_packet.serialize()), iface="vboxnet0")
-            print(f"Response sent: {inner_ip_packet}")
+            print(bcolors.OKGREEN + f"Response sent: {inner_ip_packet}" + bcolors.OKGREEN)
         except Exception as err:
             print(f"Unexpected {err=}, {type(err)=}")
             raise
