@@ -16,8 +16,8 @@ def send_packet(filename, source_ip, destination_ip):
             outer_ip_packet = IP_Packet(source_ip, destination_ip, inner_ip_packet.serialize())
             print(bcolors.OKBLUE + "Packet sent: " + str(outer_ip_packet) + bcolors.OKBLUE)
 
-            sendp(Ether() / Raw(load=outer_ip_packet.serialize()), iface="vboxnet0")
-            time.sleep(0.1)
+            sendp(Ether(src="08:00:27:c7:e1:36", dst="08:00:27:bb:7a:67") / Raw(load=outer_ip_packet.serialize()), iface="vboxnet0")
+            time.sleep(1)
 
 
 def process_received_packets(packet, expected_src_ip):
@@ -29,8 +29,6 @@ def process_received_packets(packet, expected_src_ip):
     print(f"Processing packet: {ip_packet}")
     if ip_packet.destination_ip == expected_src_ip:
         print(bcolors.OKGREEN + f"Received line: {ip_packet.payload.decode()}" + bcolors.OKGREEN)
-    else:
-        print(bcolors.FAIL + "Packet dst IP is wrong! :/" + bcolors.FAIL)
 
 
 def listener(interface, expected_src_ip):

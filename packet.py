@@ -8,7 +8,7 @@ class IP_Packet:
         self.version = 4
         self.header_length = 5
         self.type_of_service = 0
-        self.total_length = 20 + len(self.payload)
+        self.total_length = 0
         self.id = random.randint(1, 65535)
         self.flags = 2
         self.fragment_offset = 0
@@ -20,6 +20,8 @@ class IP_Packet:
         if payload is None:
             payload = b''
         self.payload = payload
+
+        self.total_length = 20 + len(self.payload)
 
         # self.header_checksum = bin(self.calculate_checksum())[2:].zfill(16)
 

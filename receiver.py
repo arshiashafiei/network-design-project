@@ -19,7 +19,7 @@ def receive_and_process_packets(packet, expected_src_ip):
             outer_payload = ip_packet.payload
             inner_ip_packet = IP_Packet.deserialize(outer_payload)
             
-            sendp(Ether() / Raw(load=inner_ip_packet.serialize()), iface="vboxnet0")
+            sendp(Ether(src="08:00:27:bb:7a:67", dst="08:00:27:c7:e1:36") / Raw(load=inner_ip_packet.serialize()), iface="vboxnet0")
             print(bcolors.OKGREEN + f"Response sent: {inner_ip_packet}" + bcolors.OKGREEN)
         except Exception as err:
             print(f"Unexpected {err=}, {type(err)=}")
@@ -31,7 +31,7 @@ def receive_and_process_packets(packet, expected_src_ip):
 def listener(interface, expected_src_ip, expected_dst_ip):
     while True:
         Captured = sniff(iface=interface, count=1)
-        print(f"Captured packet: {Captured}")
+        # print(f"Captured packet: {Captured}")
 
         receive_and_process_packets(Captured[0], expected_src_ip=expected_dst_ip)
 
