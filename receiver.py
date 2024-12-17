@@ -1,27 +1,44 @@
-from scapy.all import IP, send, sniff
+from scapy.all import IP, send, sniff, sendp, Raw
+from scapy.layers.l2 import Ether
 import threading
+
+from packet import IP_Packet
 
 
 def receive_and_process_packets(packet, expected_src_ip):
-    print(f"Processing packet: {packet}")
-    if IP in packet:
-        outer_payload = packet[IP].payload
-        if IP in outer_payload:
-            if outer_payload[IP].dst == expected_src_ip:
-                # Send the same payload back to the sender
-                response_packet = outer_payload
-                send(response_packet)
-                print(f"Response sent: {response_packet}")
+    try:
+        ip_packet = IP_Packet.deserialize(packet[Ether][Raw].load)
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
+    print(f"Processing packet: {ip_packet}")
+
+    if ip_packet.destination_ip == IP_Packet.ip_to_bin(expected_src_ip):
+        try:
+            outer_payload = eval(ip_packet.payload)
+            inner_ip_packet = IP_Packet.deserialize(outer_payload)
+            
+            response_packet = outer_payload
+            print(response_packet.get_packet_bits())
+            sendp(Ether() / Raw(load=response_packet.get_packet_bits()), iface="vboxnet0")
+            print(f"Response sent: {inner_ip_packet}")
+        except Exception as err:
+            print(f"Unexpected {err=}, {type(err)=}")
+            raise
     else:
-        print("Packet is not the one we want! :/")
+        print("Packet dst IP is wrong! :/")
+
+    
+
+ 
 
 
 def listener(interface, expected_src_ip, expected_dst_ip):
     while True:
-        Captured = sniff(iface=interface, filter=f"ip src {expected_src_ip} and ip dst {expected_dst_ip}", count=1)
+        Captured = sniff(iface=interface, count=1)
         print(f"Captured packet: {Captured}")
 
-        receive_and_process_packets(Captured[0], expected_src_ip)
+        receive_and_process_packets(Captured[0], expected_src_ip=expected_dst_ip)
 
 
 def start_receiver(interface, expected_src_ip, expected_dst_ip):

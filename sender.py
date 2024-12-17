@@ -1,4 +1,6 @@
-from scapy.all import IP, send, sniff, Raw
+from scapy.all import IP, send, sniff, Raw, sendp
+from scapy.layers.l2 import Ether
+from packet import IP_Packet
 import threading
 import time
 
@@ -6,27 +8,33 @@ import time
 def read_file_and_send(filename, source_ip, destination_ip):
     with open(filename, 'r') as file:
         for line in file:
+            inner_ip_packet = IP_Packet(source_ip, destination_ip, line)
+            print(inner_ip_packet.get_packet_bits())
             # Create the inner IP packet
-            inner_ip_packet = IP(src=destination_ip, dst=source_ip) / Raw(load=line.encode('utf-8'))
+            # inner_ip_packet =  / Raw(load=line.encode('utf-8'))
 
             # Create the outer IP packet
-            outer_ip_packet = IP(src=source_ip, dst=destination_ip) / inner_ip_packet
+            # outer_ip_packet = IP(src=source_ip, dst=destination_ip) / inner_ip_packet
+            outer_ip_packet = IP_Packet(source_ip, destination_ip, inner_ip_packet.get_packet_bits())
+            print(outer_ip_packet.payload)
 
             # Send the packet to the Dest.
-            send(outer_ip_packet)
+            sendp(Ether() / Raw(load=outer_ip_packet.get_packet_bits()), iface="vboxnet0")
             time.sleep(1)
             print(outer_ip_packet)
 
 
 def receive_and_process_packets(packet, expected_src_ip):
-    print(f"Processing packet: {packet}")
-    if IP in packet and packet[IP].dst == expected_src_ip:
-        payload = packet[IP].payload
-        if Raw in payload:
-            payload_content = payload[Raw].load.decode('utf-8')
-            print(f"Received line: {payload_content}")
+    try:
+        ip_packet = IP_Packet.deserialize(packet[Ether][Raw].load)
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
+    print(f"Processing packet: {ip_packet}")
+    if ip_packet.destination_ip == IP_Packet.ip_to_bin(expected_src_ip):
+        print(f"Received line: {ip_packet.payload}")
     else:
-        print("Packet is not the one we want! :/")
+        print("Packet dst IP is wrong! :/")
 
         # outer_payload = packet[IP].payload
         # if IP in outer_payload:
@@ -38,7 +46,7 @@ def receive_and_process_packets(packet, expected_src_ip):
 
 def listener(interface, expected_src_ip):
     while True:
-        Captured = sniff(iface=interface, filter=f"ip dst {expected_src_ip}", count=1)
+        Captured = sniff(iface=interface, count=1)
         print(f"Captured packet: {Captured}")
 
         receive_and_process_packets(Captured[0], expected_src_ip)

@@ -6,3 +6,10 @@ commands to run(at least on linux :/):
 python -m venv .venv
 pip install -U pip scapy
 ```
+
+TODO:
+
+- fragmentation
+- gather all packets then print the file
+- reliability
+- IP packet
